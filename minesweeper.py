@@ -3,7 +3,16 @@ import re
 import os
 
 
+# TODO: real world XoY
+
 def main():
+    def show_field():
+        for i in range(n):
+            row = ""
+            for j in range(m):
+                row += f"[{player_field[i][j]}]"
+            print(row)
+
     # os.system("cls")
     open_tiles = 0
     alive = True
@@ -29,21 +38,35 @@ def main():
         i = random.randint(0, m - 1)
         j = random.randint(0, n - 1)
 
-        if answer_field[i][j] == 0:
-            answer_field[i][j] = 1
+        if answer_field[j][i] == 0:
+            answer_field[j][i] = 1
         else:
             _ -= 1
+
+    print(answer_field)  # TODO: не забыть закомментить позже
 
     while open_tiles < m * n - mine_count and alive:
         # os.system("cls")
         user_cmd = [0, 0, "Action"]
-        print(player_field)  # TODO: заменить show_field()
+        show_field()
         print("[?] Введите ваше следующее действие в формате [X, Y, Flag/Open]: ")
         user_input = input()  # TODO: снизу полный пиздец
         if re.match(r"\[[0-9]+, [0-9]+, (Flag|Open)\]", user_input) \
-                and 0 <= int(re.findall(r"[0-9]+", user_input)[0]) < m \
-                and 0 <= int(re.findall(r"[0-9]+", user_input)[1]) < n:
-            user_cmd = [int(re.findall(r"[0-9]+", user_input)[0]), int(re.findall(r"[0-9]+", user_input)[1]), user_input[-5:-1]]
+                and 0 <= int(re.findall(r"[0-9]+", user_input)[1]) < m \
+                and 0 <= int(re.findall(r"[0-9]+", user_input)[0]) < n:
+            user_cmd = [int(re.findall(r"[0-9]+", user_input)[1]), int(re.findall(r"[0-9]+", user_input)[0]),
+                        user_input[-5:-1]]  # TODO: заменить это на x, y, cmd
+            # print(user_cmd[2])
+            if user_cmd[2] == 'Flag':
+                if player_field[user_cmd[0]][user_cmd[1]] != "x":
+                    player_field[user_cmd[0]][user_cmd[1]] = "x"
+                else:
+                    player_field[user_cmd[0]][user_cmd[1]] = "0"
+            elif user_cmd[2] == 'Open':
+                if player_field[user_cmd[0]][user_cmd[1]] != "-":
+                    print("это еще не открывали")  # TODO: проклятое место
+                else:
+                    print("[?] Вы уже открывали эту клетку.")
         else:
             print("[!] Вы ввели неправильную команду!")
 
