@@ -1,9 +1,7 @@
 import random
 import re
-# import os
+import os
 
-
-# TODO: real world XoY
 
 def main():
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
@@ -42,7 +40,7 @@ def main():
                 row += f"[{player_field[i][j]}]"
             print(row)
 
-    # TODO: Вставить os.system("cls")?
+    os.system("cls")  # TODO: на линухе clear
     open_tiles = 0  # количество открытых клеток для учета состояния игры
     alive = True  # игра идет пока есть пустые клетки и вы живы
 
@@ -77,7 +75,6 @@ def main():
 
     # цикл игры, работает, пока мы живы и существуют неоткрытые клетки, не являющиеся минами
     while open_tiles < m * n - mine_count and alive:
-        # os.system("cls")
         user_cmd = [0, 0, "Action"]  # [X, Y, (Flag|Open)]
         show_field()
 
@@ -88,40 +85,48 @@ def main():
         if re.match(r"\[[0-9]+, [0-9]+, (Flag|Open)\]", user_input) \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[1]) < n \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[0]) < m:
-            user_cmd = [int(re.findall(r"[0-9]+", user_input)[1]), int(re.findall(r"[0-9]+", user_input)[0]),
+            user_cmd = [n-1 - int(re.findall(r"[0-9]+", user_input)[1]), int(re.findall(r"[0-9]+", user_input)[0]),
                         user_input[-5:-1]]
 
             if user_cmd[2] == 'Flag':  # если Action = Flag
                 if player_field[user_cmd[0]][user_cmd[1]] != "x":  # если клетка еще не открыта и не помечена флагом
                     player_field[user_cmd[0]][user_cmd[1]] = "x"   # помечаем клетку флагом
+                    os.system("cls")
                 else:
                     player_field[user_cmd[0]][user_cmd[1]] = 0  # если клетка уже помечена флагом, снимаем флаг
+                    os.system("cls")
             elif user_cmd[2] == 'Open':  # если Action = Open
                 if player_field[user_cmd[0]][user_cmd[1]] == 0:  # можем открыть клетку, только если она еще не открыта
                     if answer_field[user_cmd[0]][user_cmd[1]] == 1:  # взрываемся, если открыли мину
+                        os.system("cls")
                         print("[!] К сожалению, вы взорвались.")
                         alive = False
                     else:  # если открыли не мину
                         if get_nearby_mines(user_cmd[0], user_cmd[1]) > 0:
                             player_field[user_cmd[0]][user_cmd[1]] = str(get_nearby_mines(user_cmd[0], user_cmd[1]))
+                            os.system("cls")
                             # возвращаем количество мин рядом цифрой только если их больше 0 (иначе 0 - неоткрытая
                             # клетка, конфликт)
                         else:
+                            os.system("cls")
                             player_field[user_cmd[0]][user_cmd[1]] = "-"  # возвращаем дэш, если рядом 0 мин
                         open_tiles += 1  # отслеживаем количество открытых клеток, чтобы не дать поиграть в
                         # завершенную игру
                 elif player_field[user_cmd[0]][user_cmd[1]] == "x":
                     # не даём открывать клетки, помеченные флагом. Надеюсь, так надо.
+                    os.system("cls")
                     print("[?] На эту клетку вы поставили флаг. Снимите его, чтобы раскрыть содержимое этой клетки.")
                 else:
+                    os.system("cls")
                     print("[?] Вы уже открывали эту клетку.")  # хэндл открытия уже открытой клетки
         else:
+            os.system("cls")
             print("[!] Вы ввели неправильную команду!")  # хэндл неправильного ввода
 
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
+        os.system("cls")
         print("[$] Вы победили!")
 
 
-# TODO: сделать main.py (мэйн меню), чтобы этот файл не был исполняемым
 if __name__ == "__main__":
     main()
