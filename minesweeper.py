@@ -4,6 +4,28 @@ import os
 
 
 def main():
+    def clear_save():
+        file = open("sa.ve", "w")
+        file.close()
+
+    def save_game():  # TODO: закрывать ли ваще файл?
+        file = open("sa.ve", "w")  # файл сохранения
+        answers, answers_encoded = "", ""
+        # записываем значения клеток в строку
+        for i in range(m):
+            for j in range(n):
+                answers += str(answer_field[i][j])
+        # делим записанные подряд ответы на шестнадцатеричные цифры и записываем в переведенном виде
+        for _ in range(len(answers) // 16):
+            num = answers[_ * 16:_ * 16 + 16]
+            answers_encoded += str(int(num, 16))
+        rem = (m * n) % 16
+        rem_answers = answers[len(answers) - rem:]
+        answers_encoded += str(int(rem_answers, 16))
+        # сохранение размеров матрицы и зашифрованных ответов
+        file.write(f"{m}*{n},{answers_encoded}")
+        file.close()  # заканчиваем работу с файлом сохранения
+
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
     def get_nearby_mines(i, j):  # TODO: это как-то можно лучше сделать?
         if i == 0 and j == 0:  # верхний левый угол
@@ -72,6 +94,7 @@ def main():
             answer_field[j][i] = 1
         else:
             _ -= 1
+    save_game()
 
     # цикл игры, работает, пока мы живы и существуют неоткрытые клетки, не являющиеся минами
     while open_tiles < m * n - mine_count and alive:
@@ -85,26 +108,30 @@ def main():
         if re.match(r"\[[0-9]+, [0-9]+, (Flag|Open)\]", user_input) \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[1]) < n \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[0]) < m:
-            user_cmd = [n-1 - int(re.findall(r"[0-9]+", user_input)[1]), int(re.findall(r"[0-9]+", user_input)[0]),
+            user_cmd = [n - 1 - int(re.findall(r"[0-9]+", user_input)[1]), int(re.findall(r"[0-9]+", user_input)[0]),
                         user_input[-5:-1]]
 
             if user_cmd[2] == 'Flag':  # если Action = Flag
                 if player_field[user_cmd[0]][user_cmd[1]] != "x":  # если клетка еще не открыта и не помечена флагом
-                    player_field[user_cmd[0]][user_cmd[1]] = "x"   # помечаем клетку флагом
+                    player_field[user_cmd[0]][user_cmd[1]] = "x"  # помечаем клетку флагом
                     os.system("cls")
+                    save_game()
                 else:
                     player_field[user_cmd[0]][user_cmd[1]] = 0  # если клетка уже помечена флагом, снимаем флаг
                     os.system("cls")
+                    save_game()
             elif user_cmd[2] == 'Open':  # если Action = Open
                 if player_field[user_cmd[0]][user_cmd[1]] == 0:  # можем открыть клетку, только если она еще не открыта
                     if answer_field[user_cmd[0]][user_cmd[1]] == 1:  # взрываемся, если открыли мину
                         os.system("cls")
                         print("[!] К сожалению, вы взорвались.")
                         alive = False
+                        clear_save()
                     else:  # если открыли не мину
                         if get_nearby_mines(user_cmd[0], user_cmd[1]) > 0:
                             player_field[user_cmd[0]][user_cmd[1]] = str(get_nearby_mines(user_cmd[0], user_cmd[1]))
                             os.system("cls")
+                            save_game()
                             # возвращаем количество мин рядом цифрой только если их больше 0 (иначе 0 - неоткрытая
                             # клетка, конфликт)
                         else:
@@ -112,13 +139,16 @@ def main():
                             player_field[user_cmd[0]][user_cmd[1]] = "-"  # возвращаем дэш, если рядом 0 мин
                         open_tiles += 1  # отслеживаем количество открытых клеток, чтобы не дать поиграть в
                         # завершенную игру
+                        save_game()
                 elif player_field[user_cmd[0]][user_cmd[1]] == "x":
                     # не даём открывать клетки, помеченные флагом. Надеюсь, так надо.
                     os.system("cls")
                     print("[?] На эту клетку вы поставили флаг. Снимите его, чтобы раскрыть содержимое этой клетки.")
+                    save_game()
                 else:
                     os.system("cls")
                     print("[?] Вы уже открывали эту клетку.")  # хэндл открытия уже открытой клетки
+                    save_game()
         else:
             os.system("cls")
             print("[!] Вы ввели неправильную команду!")  # хэндл неправильного ввода
@@ -126,6 +156,7 @@ def main():
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
         os.system("cls")
         print("[$] Вы победили!")
+        clear_save()
 
 
 if __name__ == "__main__":
