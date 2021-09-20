@@ -12,8 +12,8 @@ def main():
         file = open("sa.ve", "w")  # файл сохранения
         answers, answers_encoded = "", ""
         # записываем значения клеток в строку
-        for i in range(m):
-            for j in range(n):
+        for i in range(n):
+            for j in range(m):
                 answers += str(answer_field[i][j])
         # делим записанные подряд ответы на шестнадцатеричные цифры и записываем в переведенном виде
         for _ in range(len(answers) // 16):
