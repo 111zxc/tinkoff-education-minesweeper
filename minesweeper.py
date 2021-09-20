@@ -10,18 +10,13 @@ def main():
 
     def save_game():  # TODO: закрывать ли ваще файл?
         file = open("sa.ve", "w")  # файл сохранения
-        answers, answers_encoded = "", ""
+        answers = ""
         # записываем значения клеток в строку
         for i in range(n):
             for j in range(m):
                 answers += str(answer_field[i][j])
-        # делим записанные подряд ответы на шестнадцатеричные цифры и записываем в переведенном виде
-        for _ in range(len(answers) // 16):
-            num = answers[_ * 16:_ * 16 + 16]
-            answers_encoded += str(int(num, 16))
-        rem = (m * n) % 16
-        rem_answers = answers[len(answers) - rem:]
-        answers_encoded += str(int(rem_answers, 16))
+        # переводим ответы в 16сс
+        answers_encoded = hex(int(answers))
         # сохранение размеров матрицы и зашифрованных ответов
         file.write(f"{m}*{n},{answers_encoded}")
         file.close()  # заканчиваем работу с файлом сохранения
