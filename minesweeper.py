@@ -2,21 +2,35 @@ import random
 import re
 import os
 
+ 
 
 def main():
+    encode_key = 'tinkovf-edu_zxc1'
+    dictionary = '0123456789abcdef'
+
+    def clear():
+        os.system("cls" if os.name == 'nt' else "clear")
+
     def clear_save():
         file = open("sa.ve", "w")
         file.close()
 
     def save_game():  # TODO: закрывать ли ваще файл?
         file = open("sa.ve", "w")  # файл сохранения
+        
+        answers_encoded = ""
         answers = ""
+        
         # записываем значения клеток в строку
         for i in range(n):
             for j in range(m):
                 answers += str(answer_field[i][j])
-        # переводим ответы в 16сс
-        answers_encoded = hex(int(answers))
+        
+        # переводим ответы в 16сс и шифруем согласно ключу
+        answers = hex(int(answers))[2:]
+        for symbol in answers:
+            answers_encoded += encode_key[dictionary.index(symbol)]
+        
         # сохранение размеров матрицы и зашифрованных ответов
         file.write(f"{m}*{n},{answers_encoded}")
         file.close()  # заканчиваем работу с файлом сохранения
@@ -57,7 +71,7 @@ def main():
                 row += f"[{player_field[i][j]}]"
             print(row)
 
-    os.system("cls")  # TODO: на линухе clear
+    clear()  # TODO: на линухе clear
     open_tiles = 0  # количество открытых клеток для учета состояния игры
     alive = True  # игра идет пока есть пустые клетки и вы живы
 
@@ -109,47 +123,47 @@ def main():
             if user_cmd[2] == 'Flag':  # если Action = Flag
                 if player_field[user_cmd[0]][user_cmd[1]] != "x":  # если клетка еще не открыта и не помечена флагом
                     player_field[user_cmd[0]][user_cmd[1]] = "x"  # помечаем клетку флагом
-                    os.system("cls")
+                    clear()
                     save_game()
                 else:
                     player_field[user_cmd[0]][user_cmd[1]] = 0  # если клетка уже помечена флагом, снимаем флаг
-                    os.system("cls")
+                    clear()
                     save_game()
             elif user_cmd[2] == 'Open':  # если Action = Open
-                if player_field[user_cmd[0]][user_cmd[1]] == 0:  # можем открыть клетку, только если она еще не открыта
+                if answer_field[user_cmd[0]][user_cmd[1]] != 2:  # можем открыть клетку, только если она еще не открыта
                     if answer_field[user_cmd[0]][user_cmd[1]] == 1:  # взрываемся, если открыли мину
-                        os.system("cls")
+                        clear()
                         print("[!] К сожалению, вы взорвались.")
                         alive = False
                         clear_save()
                     else:  # если открыли не мину
                         if get_nearby_mines(user_cmd[0], user_cmd[1]) > 0:
                             player_field[user_cmd[0]][user_cmd[1]] = str(get_nearby_mines(user_cmd[0], user_cmd[1]))
-                            os.system("cls")
+                            clear()
                             save_game()
                             # возвращаем количество мин рядом цифрой только если их больше 0 (иначе 0 - неоткрытая
                             # клетка, конфликт)
                         else:
-                            os.system("cls")
+                            clear()
                             player_field[user_cmd[0]][user_cmd[1]] = "-"  # возвращаем дэш, если рядом 0 мин
                         open_tiles += 1  # отслеживаем количество открытых клеток, чтобы не дать поиграть в
-                        # завершенную игру
+                        answer_field[user_cmd[0]][user_cmd[1]] = 2 # завершенную игру
                         save_game()
                 elif player_field[user_cmd[0]][user_cmd[1]] == "x":
                     # не даём открывать клетки, помеченные флагом. Надеюсь, так надо.
-                    os.system("cls")
+                    clear()
                     print("[?] На эту клетку вы поставили флаг. Снимите его, чтобы раскрыть содержимое этой клетки.")
                     save_game()
                 else:
-                    os.system("cls")
+                    clear()
                     print("[?] Вы уже открывали эту клетку.")  # хэндл открытия уже открытой клетки
                     save_game()
         else:
-            os.system("cls")
+            clear()
             print("[!] Вы ввели неправильную команду!")  # хэндл неправильного ввода
 
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
-        os.system("cls")
+        clear()
         print("[$] Вы победили!")
         clear_save()
 
