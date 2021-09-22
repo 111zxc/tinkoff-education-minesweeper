@@ -7,16 +7,18 @@ def main():
     encode_key = 'tinkovf-edu_zxc1'
     dictionary = '0123456789abcdef'
 
-    def clear():
+    def clear():  # очистить экран для удобства
         os.system("cls" if os.name == 'nt' else "clear")
 
-    def load_game():
-        global m, n, mine_count, open_tiles
+    def load_game():  # загрузка сэйва
         f = open("sa.ve")
         content = f.readlines()
+
+        # получение размерности поля из сэйва
         size = content[0][:-1]
         m, n = int(size[0:size.index("*")]), int(size[size.index("*")+1:])
 
+        # расшифровка матрицу ответов
         answers = ""
         for symbol in content[1]:
             answers += dictionary[encode_key.index(symbol)]
@@ -28,16 +30,22 @@ def main():
         answer_field = [[0 for i in range(m)] for j in range(n)]
         player_field = [[0 for i in range(m)] for j in range(n)]
         
+        # заполнение поле ответов
         cntr = 0
         for i in range(n):
             for j in range(m):
                 answer_field[i][j] = int(answers[cntr])
                 cntr += 1
 
+        # основываясь на ответах, заполняет поле игрока
         for i in range(n):
             for j in range(m):
                 if answer_field[i][j] == (0 or 1):
                     player_field[i][j] = 0
+                if answer_field[i][j] == 3:
+                    player_field[i][j] = "x"
+                if answer_field[i][j] == 4:
+                    player_field[i][j] = "x"
                 if answer_field[i][j] == 2:
                     player_field[i][j] = "-" if get_nearby_mines(n, m, i, j, answer_field) == 0 else get_nearby_mines(n, m, i,j, answer_field)
         f.close()
@@ -47,13 +55,13 @@ def main():
         print("[$] Игра успешно загружена!")
         return m, n, mine_count, open_tiles, answer_field, player_field
 
-
+    # очистить сэйв (после проигрыша или победы)
     def clear_save():
         file = open("sa.ve", "w")
         file.close()
 
-    def save_game():  # TODO: закрывать ли ваще файл?
-        file = open("sa.ve", "w")  # файл сохранения
+    def save_game():
+        file = open("sa.ve", "w")
         
         answers_encoded = ""
         answers = ""
@@ -70,34 +78,49 @@ def main():
         
         # сохранение размеров матрицы и зашифрованных ответов
         file.write(f"{m}*{n}\n{answers_encoded}")
-        file.close()  # заканчиваем работу с файлом сохранения
+        file.close()
 
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
     def get_nearby_mines(n, m, i, j, answer_field):  # TODO: это как-то можно лучше сделать?
-        if i == 0 and j == 0:  # верхний левый угол
-            mines = answer_field[0][1] + answer_field[1][0] + answer_field[1][1]
-        elif i == n - 1 and j == 0:  # нижний левый угол
-            mines = answer_field[n - 1][1] + answer_field[n - 2][0] + answer_field[n - 2][1]
-        elif i == 0 and j == m - 1:  # угол)
-            mines = answer_field[i][j - 1] + answer_field[i + 1][j] + answer_field[i + 1][j - 1]
-        elif i == n - 1 and j == m - 1:  # corner))))))))
-            mines = answer_field[i][j - 1] + answer_field[i - 1][j - 1] + answer_field[i - 1][j]
+        if i == 0 and j == 0:  # угол1
+            mines = [answer_field[0][1], answer_field[1][0], answer_field[1][1]].count(1)
+            mines += [answer_field[0][1], answer_field[1][0], answer_field[1][1]].count(3)
+        elif i == n - 1 and j == 0:  # угол2
+            mines = [answer_field[n - 1][1], answer_field[n - 2][0], answer_field[n - 2][1]].count(1)
+            mines += [answer_field[n - 1][1], answer_field[n - 2][0], answer_field[n - 2][1]].count(3)
+        elif i == 0 and j == m - 1:  # угол3
+            mines = [answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][j - 1]].count(1)
+            mines += [answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][j - 1]].count(3)
+        elif i == n - 1 and j == m - 1:  # угол4
+            mines = [answer_field[i][j - 1], answer_field[i - 1][j - 1], answer_field[i - 1][j]].count(1)
+            mines += [answer_field[i][j - 1], answer_field[i - 1][j - 1], answer_field[i - 1][j]].count(3)
         elif i == 0:  # боковая стенка1
-            mines = answer_field[i][j + 1] + answer_field[i][j - 1] + answer_field[i + 1][j] + answer_field[i + 1][
-                j - 1] + answer_field[i + 1][j + 1]
+            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
+                j - 1], answer_field[i + 1][j + 1]].count(1)
+            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
+                j - 1], answer_field[i + 1][j + 1]].count(3)
         elif i == n - 1:  # боковая стенка2
-            mines = answer_field[i][j + 1] + answer_field[i][j - 1] + answer_field[i - 1][j] + answer_field[i - 1][
-                j - 1] + answer_field[i - 1][j + 1]
+            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i - 1][j], answer_field[i - 1][
+                j - 1], answer_field[i - 1][j + 1]].count(1)
+            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i - 1][j], answer_field[i - 1][
+                j - 1], answer_field[i - 1][j + 1]].count(3)
         elif j == 0:  # боковая стенка3
-            mines = answer_field[i + 1][j] + answer_field[i - 1][j] + answer_field[i][j + 1] + answer_field[i + 1][
-                j + 1] + answer_field[i - 1][j + 1]
+            mines = [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j + 1], answer_field[i + 1][
+                j + 1], answer_field[i - 1][j + 1]].count(1)
+            mines += [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j + 1], answer_field[i + 1][
+                j + 1], answer_field[i - 1][j + 1]].count(3)
         elif j == m - 1:  # боковая стенка4
-            mines = answer_field[i + 1][j] + answer_field[i - 1][j] + answer_field[i][j - 1] + answer_field[i + 1][
-                j - 1] + answer_field[i - 1][j - 1]
+            mines = [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j - 1], answer_field[i + 1][
+                j - 1], answer_field[i - 1][j - 1]].count(1)
+            mines += [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j - 1], answer_field[i + 1][
+                j - 1], answer_field[i - 1][j - 1]].count(3)    
         else:  # клетки посередине
-            mines = answer_field[i][j + 1] + answer_field[i][j - 1] + answer_field[i + 1][j] + answer_field[i + 1][
-                j + 1] + answer_field[i + 1][j - 1] + \
-                    answer_field[i - 1][j] + answer_field[i - 1][j + 1] + answer_field[i - 1][j - 1]
+            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
+                j + 1], answer_field[i + 1][j - 1], \
+                    answer_field[i - 1][j], answer_field[i - 1][j + 1], answer_field[i - 1][j - 1]].count(1)
+            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
+                j + 1], answer_field[i + 1][j - 1], \
+                    answer_field[i - 1][j], answer_field[i - 1][j + 1], answer_field[i - 1][j - 1]].count(3)
         return mines
 
     # отобразить игровое поле в читабельном виде
@@ -109,11 +132,12 @@ def main():
             print(row)
 
     clear()
+
     open_tiles = 0 # количество открытых клеток для учета состояния игры
-    alive = True  # игра идет пока есть пустые клетки и вы живы
+    alive = True  # игра идет пока вы живы
 
     f = open("sa.ve")
-    save_info = f.read()
+    save_info = f.read() 
     f.close()
 
     if save_info == "": # если сэйва нет
@@ -134,7 +158,7 @@ def main():
             raise Exception("[!] Мин должно быть больше нуля и меньше, чем клеток на поле!")
 
         player_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля, отображаемого игроку
-        answer_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля с ответами TODO: сохранять вот это
+        answer_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля с ответами
 
         # генерация мин
         for _ in range(mine_count):
@@ -158,7 +182,7 @@ def main():
         print("[?] Введите ваше следующее действие в формате [X, Y, Flag/Open]: ")
         user_input = input()
 
-        # проверка пользовательского ввода TODO: это выглядит ужасно
+        # проверка пользовательского ввода
         if re.match(r"\[[0-9]+, [0-9]+, (Flag|Open)\]", user_input) \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[1]) < n \
                 and 0 <= int(re.findall(r"[0-9]+", user_input)[0]) < m:
@@ -168,10 +192,18 @@ def main():
             if user_cmd[2] == 'Flag':  # если Action = Flag
                 if player_field[user_cmd[0]][user_cmd[1]] != "x":  # если клетка еще не открыта и не помечена флагом
                     player_field[user_cmd[0]][user_cmd[1]] = "x"  # помечаем клетку флагом
+                    if answer_field[user_cmd[0]][user_cmd[1]] == 1:
+                        answer_field[user_cmd[0]][user_cmd[1]] = 3
+                    else:
+                        answer_field[user_cmd[0]][user_cmd[1]] = 4
                     clear()
                     save_game()
                 else:
                     player_field[user_cmd[0]][user_cmd[1]] = 0  # если клетка уже помечена флагом, снимаем флаг
+                    if answer_field[user_cmd[0]][user_cmd[1]] == 3:
+                        player_field[user_cmd[0]][user_cmd[1]] = 1
+                    else:
+                        player_field[user_cmd[0]][user_cmd[1]] = 0
                     clear()
                     save_game()
             elif user_cmd[2] == 'Open':  # если Action = Open
