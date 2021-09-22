@@ -22,10 +22,15 @@ def main():
         answers = ""
         for symbol in content[1]:
             answers += dictionary[encode_key.index(symbol)]
-        answers = int(answers, 16)
-        open_tiles = str(answers).count("2")
-        mine_count = str(answers).count("1")
-        answers = str(answers) + "0" * (m * n)
+        answers = str(int(answers, 16))
+
+        temp = ""
+        for symbol in answers:
+            temp += str(int(symbol) - 1)
+        answers = temp
+
+        open_tiles = answers.count("2")
+        mine_count = answers.count("1")
         
         answer_field = [[0 for i in range(m)] for j in range(n)]
         player_field = [[0 for i in range(m)] for j in range(n)]
@@ -69,7 +74,7 @@ def main():
         # записываем значения клеток в строку
         for i in range(n):
             for j in range(m):
-                answers += str(answer_field[i][j])
+                answers += str(answer_field[i][j] + 1)  # +1 во избежание проблемы с нулями в начале матрицы
         
         # переводим ответы в 16сс и шифруем согласно ключу
         answers = hex(int(answers))[2:]
