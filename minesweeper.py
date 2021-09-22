@@ -2,7 +2,6 @@ import random
 import re
 import os
 
- 
 
 def main():
     encode_key = 'tinkovf-edu_zxc1'
@@ -10,6 +9,44 @@ def main():
 
     def clear():
         os.system("cls" if os.name == 'nt' else "clear")
+
+    def load_game():
+        global m, n, mine_count, open_tiles
+        f = open("sa.ve")
+        content = f.readlines()
+        size = content[0][:-1]
+        m, n = int(size[0:size.index("*")]), int(size[size.index("*")+1:])
+
+        answers = ""
+        for symbol in content[1]:
+            answers += dictionary[encode_key.index(symbol)]
+        answers = int(answers, 16)
+        open_tiles = str(answers).count("2")
+        mine_count = str(answers).count("1")
+        answers = str(answers) + "0" * (m * n)
+        
+        answer_field = [[0 for i in range(m)] for j in range(n)]
+        player_field = [[0 for i in range(m)] for j in range(n)]
+        
+        cntr = 0
+        for i in range(n):
+            for j in range(m):
+                answer_field[i][j] = int(answers[cntr])
+                cntr += 1
+
+        for i in range(n):
+            for j in range(m):
+                if answer_field[i][j] == (0 or 1):
+                    player_field[i][j] = 0
+                if answer_field[i][j] == 2:
+                    player_field[i][j] = "-" if get_nearby_mines(n, m, i, j, answer_field) == 0 else get_nearby_mines(n, m, i,j, answer_field)
+        f.close()
+
+        alive = True
+
+        print("[$] Игра успешно загружена!")
+        return m, n, mine_count, open_tiles, answer_field, player_field
+
 
     def clear_save():
         file = open("sa.ve", "w")
@@ -32,11 +69,11 @@ def main():
             answers_encoded += encode_key[dictionary.index(symbol)]
         
         # сохранение размеров матрицы и зашифрованных ответов
-        file.write(f"{m}*{n},{answers_encoded}")
+        file.write(f"{m}*{n}\n{answers_encoded}")
         file.close()  # заканчиваем работу с файлом сохранения
 
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
-    def get_nearby_mines(i, j):  # TODO: это как-то можно лучше сделать?
+    def get_nearby_mines(n, m, i, j, answer_field):  # TODO: это как-то можно лучше сделать?
         if i == 0 and j == 0:  # верхний левый угол
             mines = answer_field[0][1] + answer_field[1][0] + answer_field[1][1]
         elif i == n - 1 and j == 0:  # нижний левый угол
@@ -71,42 +108,50 @@ def main():
                 row += f"[{player_field[i][j]}]"
             print(row)
 
-    clear()  # TODO: на линухе clear
-    open_tiles = 0  # количество открытых клеток для учета состояния игры
+    clear()
+    open_tiles = 0 # количество открытых клеток для учета состояния игры
     alive = True  # игра идет пока есть пустые клетки и вы живы
 
-    # ввод размерностей поля (не намудрил ли я с координатами?)
-    try:
-        n, m = map(int, input("[?] Введите размеры поля (через пробел): ").split())
-    except ValueError:
-        raise ValueError("[!] Вы ввели неверные размеры поля!")
-    if m * n <= 1 or m < 0 or n < 0:
-        raise Exception("[!] Поле должно иметь больше одной клетки!")
+    f = open("sa.ve")
+    save_info = f.read()
+    f.close()
 
-    # ввод количества мин
-    try:
-        mine_count = int(input("[?] Введите количество мин: "))
-    except ValueError:
-        raise ValueError("[!] Вы ввели неверное количество мин!")
-    if mine_count <= 0 or mine_count >= m * n:
-        raise Exception("[!] Мин должно быть больше нуля и меньше, чем клеток на поле!")
+    if save_info == "": # если сэйва нет
+        # ввод размерностей поля
+        try:
+            n, m = map(int, input("[?] Введите размеры поля (через пробел): ").split())
+        except ValueError:
+            raise ValueError("[!] Вы ввели неверные размеры поля!")
+        if m * n <= 1 or m < 0 or n < 0:
+            raise Exception("[!] Поле должно иметь больше одной клетки!")
 
-    player_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля, отображаемого игроку
-    answer_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля с ответами TODO: сохранять вот это
+        # ввод количества мин
+        try:
+            mine_count = int(input("[?] Введите количество мин: "))
+        except ValueError:
+            raise ValueError("[!] Вы ввели неверное количество мин!")
+        if mine_count <= 0 or mine_count >= m * n:
+            raise Exception("[!] Мин должно быть больше нуля и меньше, чем клеток на поле!")
 
-    # генерация мин
-    for _ in range(mine_count):
-        i = random.randint(0, m - 1)
-        j = random.randint(0, n - 1)
+        player_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля, отображаемого игроку
+        answer_field = [[0 for i in range(m)] for j in range(n)]  # матрица поля с ответами TODO: сохранять вот это
 
-        if answer_field[j][i] == 0:
-            answer_field[j][i] = 1
-        else:
-            _ -= 1
-    save_game()
+        # генерация мин
+        for _ in range(mine_count):
+            i = random.randint(0, m - 1)
+            j = random.randint(0, n - 1)
+
+            if answer_field[j][i] == 0:
+                answer_field[j][i] = 1
+            else:
+                _ -= 1
+        save_game()
+    else:
+        m, n, mine_count, open_tiles, answer_field, player_field = load_game()
 
     # цикл игры, работает, пока мы живы и существуют неоткрытые клетки, не являющиеся минами
     while open_tiles < m * n - mine_count and alive:
+
         user_cmd = [0, 0, "Action"]  # [X, Y, (Flag|Open)]
         show_field()
 
@@ -137,8 +182,8 @@ def main():
                         alive = False
                         clear_save()
                     else:  # если открыли не мину
-                        if get_nearby_mines(user_cmd[0], user_cmd[1]) > 0:
-                            player_field[user_cmd[0]][user_cmd[1]] = str(get_nearby_mines(user_cmd[0], user_cmd[1]))
+                        if get_nearby_mines(n, m, user_cmd[0], user_cmd[1], answer_field) > 0:
+                            player_field[user_cmd[0]][user_cmd[1]] = str(get_nearby_mines(n, m, user_cmd[0], user_cmd[1], answer_field))
                             clear()
                             save_game()
                             # возвращаем количество мин рядом цифрой только если их больше 0 (иначе 0 - неоткрытая
@@ -165,6 +210,7 @@ def main():
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
         clear()
         print("[$] Вы победили!")
+        print(mine_count, open_tiles)
         clear_save()
 
 
