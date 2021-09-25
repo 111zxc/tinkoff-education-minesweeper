@@ -6,8 +6,8 @@ from time import sleep
 def main():
     encode_key = 'tinkovf-edu_zxc1'
     dictionary = '0123456789abcdef'
-    limit_counter = 0
 
+    # получить координаты всех соседних клеток
     def get_all_near_tiles(i, j, n, m):
         answer = []
         for _ in range(i-1, i+2):
@@ -129,45 +129,10 @@ def main():
 
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
     def get_nearby_mines(n, m, i, j, answer_field):  # TODO: это как-то можно лучше сделать?
-        if i == 0 and j == 0:  # угол1
-            mines = [answer_field[0][1], answer_field[1][0], answer_field[1][1]].count(1)
-            mines += [answer_field[0][1], answer_field[1][0], answer_field[1][1]].count(3)
-        elif i == n - 1 and j == 0:  # угол2
-            mines = [answer_field[n - 1][1], answer_field[n - 2][0], answer_field[n - 2][1]].count(1)
-            mines += [answer_field[n - 1][1], answer_field[n - 2][0], answer_field[n - 2][1]].count(3)
-        elif i == 0 and j == m - 1:  # угол3
-            mines = [answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][j - 1]].count(1)
-            mines += [answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][j - 1]].count(3)
-        elif i == n - 1 and j == m - 1:  # угол4
-            mines = [answer_field[i][j - 1], answer_field[i - 1][j - 1], answer_field[i - 1][j]].count(1)
-            mines += [answer_field[i][j - 1], answer_field[i - 1][j - 1], answer_field[i - 1][j]].count(3)
-        elif i == 0:  # боковая стенка1
-            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
-                j - 1], answer_field[i + 1][j + 1]].count(1)
-            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
-                j - 1], answer_field[i + 1][j + 1]].count(3)
-        elif i == n - 1:  # боковая стенка2
-            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i - 1][j], answer_field[i - 1][
-                j - 1], answer_field[i - 1][j + 1]].count(1)
-            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i - 1][j], answer_field[i - 1][
-                j - 1], answer_field[i - 1][j + 1]].count(3)
-        elif j == 0:  # боковая стенка3
-            mines = [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j + 1], answer_field[i + 1][
-                j + 1], answer_field[i - 1][j + 1]].count(1)
-            mines += [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j + 1], answer_field[i + 1][
-                j + 1], answer_field[i - 1][j + 1]].count(3)
-        elif j == m - 1:  # боковая стенка4
-            mines = [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j - 1], answer_field[i + 1][
-                j - 1], answer_field[i - 1][j - 1]].count(1)
-            mines += [answer_field[i + 1][j], answer_field[i - 1][j], answer_field[i][j - 1], answer_field[i + 1][
-                j - 1], answer_field[i - 1][j - 1]].count(3)    
-        else:  # клетки посередине
-            mines = [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
-                j + 1], answer_field[i + 1][j - 1], \
-                    answer_field[i - 1][j], answer_field[i - 1][j + 1], answer_field[i - 1][j - 1]].count(1)
-            mines += [answer_field[i][j + 1], answer_field[i][j - 1], answer_field[i + 1][j], answer_field[i + 1][
-                j + 1], answer_field[i + 1][j - 1], \
-                    answer_field[i - 1][j], answer_field[i - 1][j + 1], answer_field[i - 1][j - 1]].count(3)
+        near_tiles = get_all_near_tiles(i, j, n, m)
+        mines = 0
+        for el in near_tiles:
+            if answer_field[el[0]][el[1]] == 1 or answer_field[el[0]][el[1]] == 3: mines += 1
         return mines
 
     # отобразить игровое поле в читабельном виде
@@ -264,7 +229,6 @@ def main():
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
         clear()
         print("[$] Вы победили!")
-        print(mine_count, open_tiles)
     else:
         print("[!] К сожалению, Вы взорвались..")
     print("[?] Следующая игра начнётся через 10 секунд..    ")
