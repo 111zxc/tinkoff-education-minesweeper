@@ -191,8 +191,7 @@ def main():
 
         user_cmd = [0, 0, "Action"]  # [X, Y, (Flag|Open)]
         show_field()
-
-        print(open_tiles, m, n)
+        
         print("[?] Введите ваше следующее действие в формате [X, Y, Flag/Open]: ")
         user_input = input()
 
