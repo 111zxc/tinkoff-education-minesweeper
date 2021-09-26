@@ -4,7 +4,7 @@ import os
 from time import sleep
 
 def main():
-    encode_key = 'tinkovf-edu_zxc1'
+    encode_key = 'tinkovf-edu_zxc1'  # ключ для шифрования сохранения
     dictionary = '0123456789abcdef'
 
     # получить координаты всех соседних клеток
@@ -16,30 +16,28 @@ def main():
                     answer.append((_, __))
         return answer
 
-    def open_tile(i, j, answer_field, player_field, open_tiles, alive, limit_counter=0):
+    def open_tile(i, j, answer_field, player_field, alive, limit_counter=0):  # раскрыть содержимое клетки
         limit_counter += 1
         if answer_field[i][j] != (2, 3, 4):  # можем открыть клетку, только если она еще не открыта и не флаг
-            if limit_counter >= 4:  # лимит, чтобы не впадать в максимальную глубину рекурсии. TODO: ваще это неправильно
-                return answer_field, player_field, open_tiles, alive
+            if limit_counter >= 4:  # лимит, чтобы не впадать в максимальную глубину рекурсии TODO: ваще это неправильно
+                return answer_field, player_field, alive
             if answer_field[i][j] == 1:  # взрываемся, если открыли мину
                 alive = False
             else:  # если открыли не мину
                 if get_nearby_mines(n, m, i, j, answer_field) > 0:
                     player_field[i][j] = str(get_nearby_mines(n, m, i, j, answer_field))
                     answer_field[i][j] = 2
-                    open_tiles += 1
                     # возвращаем количество мин рядом цифрой только если их больше 0 (иначе 0 - неоткрытая
                     # клетка, конфликт)
                 else:
                     player_field[i][j] = "-"  # возвращаем дэш, если рядом 0 мин
                     answer_field[i][j] = 2
-                    open_tiles += 1
-                    for element in get_all_near_tiles(i, j, n, m):
-                        open_tile(element[0], element[1], answer_field, player_field, open_tiles, alive, limit_counter)
+                    for element in get_all_near_tiles(i, j, n, m):  # если рядом нет мин, открываем все клетки поблизости
+                        answer_field, player_field, alive = open_tile(element[0], element[1], answer_field, player_field, alive, limit_counter)
                 save_game()
                 clear()
         elif player_field[i][j] == "x":
-            # не даём открывать клетки, помеченные флагом. Надеюсь, так надо.
+            # не даём открывать клетки, помеченные флагом. Надеюсь, так надо
             clear()
             print("[?] На эту клетку вы поставили флаг. Снимите его, чтобы раскрыть содержимое этой клетки.")
             save_game()
@@ -47,7 +45,7 @@ def main():
             clear()
             print("[?] Вы уже открывали эту клетку.")  # хэндл открытия уже открытой клетки
             save_game()        
-        return answer_field, player_field, open_tiles, alive
+        return answer_field, player_field, alive
 
     def clear():  # очистить экран
         os.system("cls" if os.name == 'nt' else "clear")
@@ -66,6 +64,7 @@ def main():
             answers += dictionary[encode_key.index(symbol)]
         answers = str(int(answers, 16))
 
+        # вычитаем прибавленные при сохранении единицы
         temp = ""
         for symbol in answers:
             temp += str(int(symbol) - 1)
@@ -77,7 +76,7 @@ def main():
         answer_field = [[0 for i in range(m)] for j in range(n)]
         player_field = [[0 for i in range(m)] for j in range(n)]
         
-        # заполнение поле ответов
+        # заполнение поля ответов
         cntr = 0
         for i in range(n):
             for j in range(m):
@@ -128,7 +127,7 @@ def main():
         file.close()
 
     # получить количество мин по-соседству с данной клеткой; используется после открытия клетки
-    def get_nearby_mines(n, m, i, j, answer_field):  # TODO: это как-то можно лучше сделать?
+    def get_nearby_mines(n, m, i, j, answer_field):
         near_tiles = get_all_near_tiles(i, j, n, m)
         mines = 0
         for el in near_tiles:
@@ -146,7 +145,7 @@ def main():
     clear()
 
     open_tiles = 0 # количество открытых клеток для учета состояния игры
-    alive = True  # игра идет пока вы живы
+    alive = True
 
     f = open("sa.ve")
     save_info = f.read() 
@@ -187,12 +186,13 @@ def main():
     else:
         m, n, mine_count, open_tiles, answer_field, player_field = load_game()
 
-    # цикл игры, работает, пока мы живы и существуют неоткрытые клетки, не являющиеся минами
+    # цикл игры; работает, пока мы живы и существуют неоткрытые клетки, не являющиеся минами
     while open_tiles < m * n - mine_count and alive:
 
         user_cmd = [0, 0, "Action"]  # [X, Y, (Flag|Open)]
         show_field()
 
+        print(open_tiles, m, n)
         print("[?] Введите ваше следующее действие в формате [X, Y, Flag/Open]: ")
         user_input = input()
 
@@ -221,10 +221,15 @@ def main():
                     clear()
                     save_game()
             elif user_cmd[2] == 'Open':  # если Action = Open
-                answer_field, player_field, open_tiles, alive = open_tile(user_cmd[0], user_cmd[1], answer_field, player_field, open_tiles, alive)
+                answer_field, player_field, alive = open_tile(user_cmd[0], user_cmd[1], answer_field, player_field, alive)
         else:
             clear()
             print("[!] Вы ввели неправильную команду!")  # хэндл неправильного ввода
+        open_tiles = 0
+        for i in range(n):
+            for j in range(m):
+                if answer_field[i][j] == 2:
+                    open_tiles += 1
 
     if alive:  # винкондишн достигается, если цикл вайл закончен (нет неоткрытых клеток не мин) и мы остались в живых
         clear()
