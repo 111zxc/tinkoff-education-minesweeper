@@ -3,6 +3,8 @@ import os
 from time import sleep
 
 def main():
+    ex_eli, ex_elj = -1, -1
+
     # получить координаты всех соседних клеток
     def get_all_near_tiles(i, j, n, m):
         answer = []
@@ -94,7 +96,7 @@ def main():
     while open_tiles < m * n - mine_count and alive:
         show_field()
 
-        # действие алгоритма
+        ## работа алгоритма ##
         value_map = [[0 for i in range(m)] for j in range(n)]
         tempCounter = 0
         for i in player_field:
@@ -139,8 +141,17 @@ def main():
                     maxel = value_map[i][j]
                     el_i = i
                     el_j = j
+        
+        if el_i == ex_eli and el_j == ex_elj:  # рандом если алгоритм в тупике TODO: тупика не должно быть  
+            chosen = False
+            while not chosen:
+                el_i = random.randint(0, n-1)
+                el_j = random.randint(0, m-1)
+                if player_field[el_i][el_j] == 0:
+                    chosen = True
         print(f"[?] Алгоритм решил выбрать клетку с координатами ({el_i}, {el_j})!")
-        open_tile(el_i, el_j, answer_field, player_field, alive)
+        answer_field, player_field, alive = open_tile(el_i, el_j, answer_field, player_field, alive)
+        ex_eli, ex_elj = el_i, el_j
         ## конец работы алгоритма ##
         
         open_tiles = 0
