@@ -96,8 +96,6 @@ def main():
                     player_field[i][j] = "-" if get_nearby_mines(n, m, i, j, answer_field) == 0 else get_nearby_mines(n, m, i,j, answer_field)
         f.close()
 
-        alive = True
-
         print("[$] Игра успешно загружена!")
         return m, n, mine_count, open_tiles, answer_field, player_field
 
